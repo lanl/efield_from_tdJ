@@ -1,7 +1,7 @@
-                                  `efield_from_tdJ.py` User Guide
+`efield_from_tdJ.py` User Guide
 ====================================================================================================
 
-                                              Overview
+Overview
 ----------------------------------------------------------------------------------------------------
 The efield_from_tdJ.py Python tool is designed to compute the electric field from a general
 time-dependent current density (J) input. The tool applies the electric field Jefimenko equation,
@@ -15,14 +15,14 @@ providing the time-dependent J, and 3) a probe position at a point in space (not
 contained within the simulation volume), will compute the electric field broken down into static,
 induction, and radiation terms.
 
-                                            Dependencies
+Dependencies
 ----------------------------------------------------------------------------------------------------
 
 The efield_from_tdJ.py was developed using Python 3.6 and the only package that must be install on
 top of the built-in modules is numpy. The required install via pip can be performed using the
 requirements.txt file in the top directory.
 
-                                           Program Inputs
+Program Inputs
 ----------------------------------------------------------------------------------------------------
 
 For computing the electric field three inputs are required: 1) a configuration file, 2) an input
@@ -140,16 +140,16 @@ As with the notation for the indices, the `{J_0}` component is along axis "x_0,"
 
 ### Probe Position
 
-                                          Program Outputs
+Program Outputs
 ----------------------------------------------------------------------------------------------------
 
-                                       Command Line Interface
+Command Line Interface
 ----------------------------------------------------------------------------------------------------
 
-                                        Directory Structure
+Directory Structure
 ----------------------------------------------------------------------------------------------------
 
-                                             References
+References
 ----------------------------------------------------------------------------------------------------
 1) Shao, X.-M. (2016) "Generalization of the lightning electromagnetic equations of Uman, McLain,
    and Krider based on Jeﬁmenko equations," J. Geophys. Res. Atmos., 121, 3363–3371,
