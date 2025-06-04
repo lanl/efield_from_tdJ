@@ -173,8 +173,8 @@ is named the "LLL" corner.
 #### Probe Position By Coordinates
 
 The probe position is specified by the command-line by using the `--coordinates/-c` option. If
-one wanted to put the probe at position `(x,y,z) = (1 m, 2 m, 3 m)`, the command-line would look
-as follows:
+one wanted to put the probe at position $`(x,y,z) = (1 m, 2 m, 3 m)`$, the command-line would
+look as follows:
 
 ```
 python3 efield_from_tdJ.py --coordinates 1 2 3 ...
@@ -184,7 +184,7 @@ Notice that `-s` is not set because it defaults to "cartesian."
 
 When setting the position by coordinates, it is important to know that `efield_from_tdJ.py` will
 assume a particular coordinate order and units depending on the coordinate system. For cartesian,
-it will assume the arguments are in $`X, Y, Z`$ order and all values are in units of meters. For
+it will assume the arguments are in $`x, y, z`$ order and all values are in units of meters. For
 cylindrical, it will assume the arguments are in $`r, \theta, z`$ order and that the units are
 meters, degrees, and meters.
 
@@ -195,11 +195,99 @@ of the cell whose center the position falls on.
 Program Outputs
 ----------------------------------------------------------------------------------------------------
 
+The `efield_from_tdJ.py` program will write three output ASCII text files, one for each electric
+field term: static, induction, and radiation. These files are place in the directory specified by
+the `--output/-o` option and are named by the below convention:
+
+```
+efield_{FIELD_TERM}_{UNIQUE_ID}_{DATE}_{TIME}.txt,
+```
+
+where:
+- {FIELD_TERM} : identifies the term of the full electric field. One of "static," "induction," or
+  "radiation."
+- {UNIQUE_ID} : a unique string identifier supplied by the user. Default : "probe0".
+- {DATE} : the date the file was written. Format : "YYYYMMDD" (e.g., 20250603)
+- {TIME} : the time the file was written. Format : "hhmmss" (e.g., 121212)
+
+The output file ASCII file has 4 columns providing the time, $`E_x`$ component, $`E_y`$ component,
+and $`E_z`$ component.
+
+For the time column, each timestamp is the center of a time bin of width `bin_width` converted to
+units of seconds. The number of time entries (and associated electric field) is equal to `num_bins`
+for the time axis multiplied by the scalar `N_TO_BINS`, where `N_TO_BINS` is the argument supplied
+to the `--ntime_bins/-n` command-line option. By default, $`N_TO_BINS = 2`$.
+
+For each electric field component, the value is provided as a decimal value and the units are
+$`V/m`$.
+
+Column labels and units are provided in the header line of the output.
+
 Command Line Interface
 ----------------------------------------------------------------------------------------------------
 
+For information on how to use `efield_from_tdJ.py` run:
+
+```
+$ python3 efield_from_tdJ.py --help
+$ ./efield_from_tdJ.py --help # alternatively run as executable
+```
+
+The help command listed the following options:
+
+-  `-h, --help` :  show this help message and exit
+-  `-s, --probe_coord_syst` : Coordinate system of the provided probe position.
+   Options: "cartesian" or "cylindrical". Default: "cartesian"
+-  `-c, --coordinates` : Coordinates of the probe position in meters from the
+   origin. The coordinate system determines how these positional arguments are interpetted. If
+   COORD_SYST="cartesian", X_0 = X, X_1 = Y, and X_2 = Z. If COORD_SYST="cylindrial",
+   X_0 = radius (meters), X_1 = theta (degrees), and X_2 = z (meters).
+-  `--is_index` : If is_index is set, the --indices argument is expected for the probe position.
+   Otherwise, the --coordinates argument is expected.
+-  `--no-time-offset` : If this flag is set, the origin of the time axis always corresponds
+   with the origin of the input time axis. By default, the time axis is shifted so the
+   signal starts at the 10th time point.
+-  `-I, --indices` : Indices of the probe position in spatial array. When indices are used,
+   the probe is placed in the corner of the gridded volume element with index (I_0, I_1, I_2).
+   The exact corner is the intersection of the three lower edges of the orthogonal 3D grid.
+   The index order corresponds with the order of dimensions provided in the geometry config.
+-  `-o, --output` : Required full output directory path
+-  `-i, --input` : Required full input filepath
+-  `-u, --unique_id` : String to place in the unique ID token of the output file name. This
+   allows the used to tweak file names to associate the result with some string that identifies
+   it.
+-  `-n, --ntime_bins` : Number of time bins in the output time axis. The default is 2 times the
+   number of bins as the input time axis.
+-  `-g, --geometry-config` : Configuration file (INI) providing the simulated volume and geometry
+-  `--verbose` : If flag is set, higher verbosity is enabled and debugging information is printed.
+
+All important command-line options are discussed in detail in the appropriate sections above.
+
+
 Directory Structure
 ----------------------------------------------------------------------------------------------------
+
+The project has the following directory structure:
+
+```
+.
+├── config
+├── src
+└── utils
+```
+
+The `config` directory contains the two pre-shipped configuration files. Both files define the same
+simulated volume but `sample_config.ini` contains comments elaborating on different elements.
+
+The `src` directory contains the source code for the `efield_from_tdJ.py` tool, including the
+`efield_from_tdJ.py` script itself and other files imported for the computation, storing globals,
+reading the input, writing the output, defining the SimulationVolume class and related classes, and
+setting physical constants.
+
+The `utils` directory has two utility scripts. The `bin_to_csv.py` converts a binary file to a
+`efield_from_tdJ.py` compatible input. This script is unlikely to be of use to a user. The other
+utility, `plot_ascii_output.py`, is much more broadly useable and created a PDF plot of a given
+ASCII output from `efield_from_tdJ.py`.
 
 References
 ----------------------------------------------------------------------------------------------------

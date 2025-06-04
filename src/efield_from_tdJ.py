@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from read_process_inputs import read_and_analyze_text_file
 from simulated_geometry import SimulationVolume, SimulationAxis, SimulationPosition
 from write_outputs import write_ascii_output
@@ -163,11 +165,14 @@ def parse_cmd_line(argv):
     parser.add_argument('-i','--input', dest='ifile',
                         metavar='IFILE', required=True,
                         help='Required full input filepath')
+    parser.add_argument('-u','--unique_id', dest='unique_id',
+                        metavar='ID', default='probe0',
+                        help=('String to place in the unique ID token of the '
+                              'output file name. This allows the used to tweak file names '
+                              'to associate the result with some string that identifies it.'))
     parser.add_argument('-n', '--ntime_bins', dest='n_tO_bins', default = None,
                         help=('Number of time bins in the output time axis. The default is 2 times '
                               'the number of bins as the input time axis.'))
-
-    # Add the input and output
     parser.add_argument('-g', '--geometry-config', dest='geometry_conf',
                         help=('Configuration file (INI) providing the simulated '
                               'volume and geometry'),
@@ -317,7 +322,7 @@ def main():
 
     # Write to the output file
     print(f"{' Writing Output ':=^80}")
-    write_ascii_output(o_dir, 'probe0', tO_ax, E_sta, E_ind, E_rad)
+    write_ascii_output(o_dir, args.unique_id, tO_ax, E_sta, E_ind, E_rad)
     print(f"{' Done ':=^80}")
     print(80 * "*")
 
