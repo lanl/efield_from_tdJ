@@ -115,8 +115,8 @@ def parse_cmd_line(argv):
     parser.add_argument('-s','--probe_coord_syst', dest='coord_syst',
                         metavar='COORD_SYST', default='cartesian',
                         choices=['cartesian', 'cylindrical'],
-                        help=('Coordinate system of the provided probe position'
-                              'Options: "cartesian" or "cylindrical"'
+                        help=('Coordinate system of the provided probe position. '
+                              'Options: "cartesian" or "cylindrical". '
                               'Default: "cartesian"'))
 
     # Add the coordinate argument

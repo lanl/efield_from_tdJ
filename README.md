@@ -31,16 +31,17 @@ described in detail in the following sub-sections.
 
 ### Simulation Volume
 
+The efield_from_tdJ.py tool initializes the simulation volume as a SimulationVolume object
+(defined in src/simulation_geometry.py) from a .ini configuation file. The configuration file
+is provided using the `--geometry-config` option. See the sample and cylindrical configuration
+files in the `config` directory.
+
 The simulation volume is the discretized volume/grid over which the current density is the current
 densities are specified. The simulation volume includes time binning (time steps) and spatial
 binning (cells). For electric field calculations from contributing discrete cells, the cell size
 itself can drastically impact the result if the probe position (point at which the electric field
 is calculated) is contained within the simulation volume grid. This is due to the singularly
 present in the r^(-1 * N) terms of the generalized Uman, McLain, and Krider E-field equation.
-
-The efield_from_tdJ.py tool initializes the simulation volume as a SimulationVolume object
-(defined in src/simulation_geometry.py) from a .ini configuation file. See the sample and
-cylindrical configuration files in the config directory.
 
 As presently written, the tool only supports cartesian and cylindrical coordinate systems.
 
@@ -108,9 +109,10 @@ either bare or with a prefix (as described in `units` above).
 
 ### Current Density CSV File
 
-The current density is supplied to efield_from_tdJ.py using a simple 7 column comma-separated value
-(CSV) file. Each line of the input CSV, representing a current density entry from a given cell and
-time step, is expected to be formatted as follows:
+The current density is supplied to efield_from_tdJ.py using the `--ifile` command-line option.
+The expected input is a simple 7 column comma-separated value (CSV) file. Each line of the
+input CSV, representing a current density entry from a given cell and time step, is assumed
+to be formatted as follows:
 
 ```
 {INDEX_T},{INDEX_X_0},{INDEX_X_0},{INDEX_X_0},{J_0},{J_1},{J_2}
@@ -139,6 +141,56 @@ As with the notation for the indices, the `{J_0}` component is along axis "x_0,"
 "x_1," and `{J_2}` along "x_2". 
 
 ### Probe Position
+
+The last major input is the probe position. This is the location from which the electric field is
+being measured. In `efield_from_tdJ`, distances (r) are computed from the probe to each cell center.
+Due to the $`1/r^{n}`$ terms in the Jefimenko equation, the user should be mindful of the exact
+position when placing the probe within the simulated volume, particularly when cell sizes are small.
+
+The probe position is supplied from the command line in one of two ways: by cell index or by
+coordinates. In either case, the `--probe_coord_syst/-s` option is essential in declaring the
+corrdinate system of the probe position. By default, the coordinate system is "cartesian."
+
+
+#### Probe Position By Index
+
+The probe position is specified by index from the command-line by setting the `--is-index`` flag
+and then using the `--indices/-I` option. For example, putting the probe at the cell formed by the
+intersection of all three axes in cylindrical coordinates would look like:
+
+```
+python3 efield_from_tdJ.py -s cylindrical -I 0 0 0 --is-index ...
+```
+
+The three arguments of `-I` are the indices in the simulated volume of axes "x_0," "x_1," and
+"x_2," respectively. So, it is important to confirm that the order of the coordinates agree with
+the order of the axes set in the "geometry" section of the configuration file.
+
+When placing a probe by index, the exact position used is the corner of the cell defined by the
+intersection of the 3 lower magnitude edges of each axis containing the cell. In the code, this
+is named the "LLL" corner.
+
+#### Probe Position By Coordinates
+
+The probe position is specified by the command-line by using the `--coordinates/-c` option. If
+one wanted to put the probe at position `(x,y,z) = (1 m, 2 m, 3 m)`, the command-line would look
+as follows:
+
+```
+python3 efield_from_tdJ.py --coordinates 1 2 3 ...
+```
+
+Notice that `-s` is not set because it defaults to "cartesian."
+
+When setting the position by coordinates, it is important to know that `efield_from_tdJ.py` will
+assume a particular coordinate order and units depending on the coordinate system. For cartesian,
+it will assume the arguments are in $`X, Y, Z`$ order and all values are in units of meters. For
+cylindrical, it will assume the arguments are in $`r, \theta, z`$ order and that the units are
+meters, degrees, and meters.
+
+The `efield_from_tdJ.py` script will prevent the user from putting a probe on a cell center, thus
+avoiding divide by zero errors, by shifting the position to the lower-lower-lower ("LLL") corner
+of the cell whose center the position falls on.
 
 Program Outputs
 ----------------------------------------------------------------------------------------------------
