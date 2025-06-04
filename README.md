@@ -3,87 +3,86 @@
 
 Overview
 ----------------------------------------------------------------------------------------------------
-The efield_from_tdJ.py Python tool is designed to compute the electric field from a general
-time-dependent current density (J) input. The tool applies the electric field Jefimenko equation,
-depending solely on time-dependent J, from Shao (2016). This equation (equation 17), with the
+The `efield_from_tdJ.py` Python tool is designed to compute the electric field from a general
+time-dependent current density (J) input. The tool applies the Jefimenko electric field equation,
+dependent solely on time-dependent J, from Shao (2016). This equation (equation 17), with the
 Jefimenko magnetic field equation, can be considered a 3-dimensional generalization of the Uman,
 McLain, and Krider equations and is particularly useful in studies of lightning physics.
 
-efield_from_tdJ.py, when supplied with 1) a configuration file (.ini) specifying a discrete
-space-time for over which the current density (called the simulation volume), 2) a .cvs input file
-providing the time-dependent J, and 3) a probe position at a point in space (not necesarily
-contained within the simulation volume), will compute the electric field broken down into static,
-induction, and radiation terms.
+`efield_from_tdJ.py`, when supplied with 1) a configuration file (.ini) specifying a discrete
+space-time (called the simulation volume), 2) a CSV input file
+providing the time-dependent J over the simulation volume, and 3) a probe position (not necesarily
+contained within the simulation volume), will compute the electric field at the probe position and
+broken down into static, induction, and radiation terms.
 
 Dependencies
 ----------------------------------------------------------------------------------------------------
 
-The efield_from_tdJ.py was developed using Python 3.6 and the only package that must be install on
-top of the built-in modules is numpy. The required install via pip can be performed using the
-requirements.txt file in the top directory.
+The `efield_from_tdJ.py` tool a Python3 script and was developed using Python 3.6. The only package
+that must be installed on top of the built-in modules is `numpy`. The required install via pip can be
+performed using the requirements.txt file in the top directory.
 
 Program Inputs
 ----------------------------------------------------------------------------------------------------
 
 For computing the electric field three inputs are required: 1) a configuration file, 2) an input
-current density, and 4) a probe position. This inputs each have their own required formats and are
+current density, and 3) a probe position. Each input has its own required formats and are
 described in detail in the following sub-sections.
 
 ### Simulation Volume
 
 The efield_from_tdJ.py tool initializes the simulation volume as a SimulationVolume object
-(defined in src/simulation_geometry.py) from a .ini configuation file. The configuration file
+(defined in `src/simulation_geometry.py`) from a .ini configuation file. The configuration file
 is provided using the `--geometry-config` option. See the sample and cylindrical configuration
 files in the `config` directory.
 
-The simulation volume is the discretized volume/grid over which the current density is the current
-densities are specified. The simulation volume includes time binning (time steps) and spatial
+The simulation volume is the discretized volume/grid over which the time-dependent current density
+is specified. The simulation volume includes time binning (time steps) and spatial
 binning (cells). For electric field calculations from contributing discrete cells, the cell size
 itself can drastically impact the result if the probe position (point at which the electric field
 is calculated) is contained within the simulation volume grid. This is due to the singularly
-present in the r^(-1 * N) terms of the generalized Uman, McLain, and Krider E-field equation.
+present in the $`1/r^{n}`$ terms of the generalized Uman, McLain, and Krider E-field equation.
 
 As presently written, the tool only supports cartesian and cylindrical coordinate systems.
 
-A valid configuration file needs the following five sections: "geometry", "x_0", "x_1", "x_2",
+A valid configuration file needs the following five sections: "geometry," "x_0," "x_1," "x_2,"
 and "t". Each section is described below.
 
 #### The "geometry" Section
 
-The "geometry" section defines the coordinate frame in the broadest sense. The "coordinate_system"
+The "geometry" section defines the coordinate frame in the broadest sense. The `coordinate_system`
 element can have values "cartesian" or "cylindrical" and selects the coordinate system for the 
 simulated volume.
 
-The other three expected elements are x_0, x_1, x_2 and give the names of each dimension of the
-three dimensional space. For cylindrical coordinates, the expected dimension names are "r",
+The other three expected elements are `x_0`, `x_1`, `x_2` and they give the names the coordinates
+of the three dimensional space. For cylindrical coordinates, the expected dimension names are "r",
 "theta", and "z", which represent the radial, azimuthal, and z coordinates, respectively. For
-cartesian corrdinates, the expected dimension names are "x", "y", and "z"
+cartesian corrdinates, the expected dimension names are "x", "y", and "z."
 
-The names "x_#" are meant to abstract away the exact coordinate frame in the code and the exact
-mapping of "x_#" to a given dimension should not be of concern to the user.
+The names `x_#` are meant to abstract away the exact coordinate frame in the code.
 
 #### The "x_#" Sections
 
-Each "x_#" section provides details of the discretization of the coordinate assigned to it in the
-"geometry" section. These sections provide parameters for initializing a simulated axis, three of
-which define the simulated volume spatial grid.
+Each `x_#` section provides details of the discretization of the coordinate mapped to it in the
+"geometry" section. These sections provide parameters for initializing a simulated axis
+(`SimulationAxis` object), three of which define the simulated volume spatial grid.
 
 The elements of the axis sections are:
 
-- `spacing` : the bin spacing along the axis. Accepted values are "linear", "log", "log2", and
+- `spacing` : The bin spacing along the axis. Accepted values are "linear", "log", "log2", and
   "log10". The value "log" is used for the natural log.
 - `num_bins` : the number of bins to create along the dimension. The number of bin edges is 
   `num_bins + 1`.
 - `units` : the physical units of used when setting the axis domain. The valid values depent on
   the dimension type (or coordinate). For most spatial axes, the accepted value is "m" for meters.
   For angular dimensions, the accepted values are "rad" and "deg," for radians and degrees,
-  respectively. For a time axis (see "The 't' Section"), the expected value is "t". The "t" and
+  respectively. For a time axis (see "The 't' Section"), the expected value is "s". The "s" and
   "m" units can be prefixed by a single character giving the unit scale. The prefixes are: "n"
-  for nano-, "u" for micro-, "m" for milli-, "c" for centi-, amd "k" for kilo-.
+  for "nano-," "u" for "micro-," "m" for "milli-," "c" for "centi-," and "k" for "kilo-."
 - `min` : minimum extent of the axis (first bin  lower edge) in units of `units`.
 - `max` : maximum extent of the axis (last bin upper edge) in units of `units`.
 - `bin_width` : can be specify the width of each bin in units of `units`. Only compatible with
-  linear bin spacing. When used, the SimulationAxis will create `num_bins` number of linearly
+  linear bin spacing. When used, the `SimulationAxis` will create `num_bins` number of linearly
   spaces bins, each with width `bin_width` and starting with the first lower edge at `min`.
 
 Generally, the minimum elements needed to specify an axis are:
@@ -94,8 +93,8 @@ Generally, the minimum elements needed to specify an axis are:
 For both options, `min` isn't listed because its defaulted to 0, but the user can change the `min`
 if needed.
 
-For option 1, the SimulationAxis object will create an axis of `num_bins` linearly spaced bins, each
-of width `bin_width` (the width in units `units`) and starting at `min`. So, if `bin_width` is 2 m
+For option 1, the `SimulationAxis` object will create an axis of `num_bins` linearly spaced bins, each
+of width `bin_width` (the width in units of `units`) and starting at `min`. So, if `bin_width` is 2 m
 and there are 20 bins, the axis will span from 0 to 40 meters.
 
 For option 2, the SimulationAxis will get the domain from `min` (default 0) to `max` and chop it
@@ -109,8 +108,8 @@ either bare or with a prefix (as described in `units` above).
 
 ### Current Density CSV File
 
-The current density is supplied to efield_from_tdJ.py using the `--ifile` command-line option.
-The expected input is a simple 7 column comma-separated value (CSV) file. Each line of the
+The current density is supplied to `efield_from_tdJ.py` using the `--ifile` command-line option.
+The expected input is a simple 7-column comma-separated value (CSV) file. Each line of the
 input CSV, representing a current density entry from a given cell and time step, is assumed
 to be formatted as follows:
 
@@ -142,8 +141,8 @@ As with the notation for the indices, the `{J_0}` component is along axis "x_0,"
 
 ### Probe Position
 
-The last major input is the probe position. This is the location from which the electric field is
-being measured. In `efield_from_tdJ`, distances (r) are computed from the probe to each cell center.
+The last major input is the probe position. This is the location at which the electric field is
+being measured. In `efield_from_tdJ`, distances ($`r`$) are computed from the probe to each cell center.
 Due to the $`1/r^{n}`$ terms in the Jefimenko equation, the user should be mindful of the exact
 position when placing the probe within the simulated volume, particularly when cell sizes are small.
 
@@ -154,8 +153,8 @@ corrdinate system of the probe position. By default, the coordinate system is "c
 
 #### Probe Position By Index
 
-The probe position is specified by index from the command-line by setting the `--is-index`` flag
-and then using the `--indices/-I` option. For example, putting the probe at the cell formed by the
+The probe position is specified by index from the command-line by setting the ``--is-index`` flag
+and then using the ``--indices/-I`` option. For example, putting the probe at the cell formed by the
 intersection of all three axes in cylindrical coordinates would look like:
 
 ```
@@ -167,8 +166,8 @@ The three arguments of `-I` are the indices in the simulated volume of axes "x_0
 the order of the axes set in the "geometry" section of the configuration file.
 
 When placing a probe by index, the exact position used is the corner of the cell defined by the
-intersection of the 3 lower magnitude edges of each axis containing the cell. In the code, this
-is named the "LLL" corner.
+intersection of the 3 lower magnitude edges of each axis bin containing the cell. In the code,
+this is named the "LLL" or "lll" corner.
 
 #### Probe Position By Coordinates
 
@@ -186,11 +185,12 @@ When setting the position by coordinates, it is important to know that `efield_f
 assume a particular coordinate order and units depending on the coordinate system. For cartesian,
 it will assume the arguments are in $`x, y, z`$ order and all values are in units of meters. For
 cylindrical, it will assume the arguments are in $`r, \theta, z`$ order and that the units are
-meters, degrees, and meters.
+meters, degrees, and meters, respectively.
 
 The `efield_from_tdJ.py` script will prevent the user from putting a probe on a cell center, thus
 avoiding divide by zero errors, by shifting the position to the lower-lower-lower ("LLL") corner
-of the cell whose center the position falls on.
+of the cell whose center the position falls on. A message will be sent to the console when this
+happens.
 
 Program Outputs
 ----------------------------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ efield_{FIELD_TERM}_{UNIQUE_ID}_{DATE}_{TIME}.txt,
 ```
 
 where:
-- {FIELD_TERM} : identifies the term of the full electric field. One of "static," "induction," or
+- {FIELD_TERM} : identifies the term of the full electric field. One of: "static," "induction," or
   "radiation."
 - {UNIQUE_ID} : a unique string identifier supplied by the user. Default : "probe0".
 - {DATE} : the date the file was written. Format : "YYYYMMDD" (e.g., 20250603)
@@ -214,9 +214,9 @@ The output file ASCII file has 4 columns providing the time, $`E_x`$ component, 
 and $`E_z`$ component.
 
 For the time column, each timestamp is the center of a time bin of width `bin_width` converted to
-units of seconds. The number of time entries (and associated electric field) is equal to `num_bins`
+units of seconds. The number of time entries (and associated electric field entries) is equal to `num_bins`
 for the time axis multiplied by the scalar `N_TO_BINS`, where `N_TO_BINS` is the argument supplied
-to the `--ntime_bins/-n` command-line option. By default, $`N_TO_BINS = 2`$.
+to the `--ntime_bins/-n` command-line option. By default, $`N\_TO\_BINS = 2`$.
 
 For each electric field component, the value is provided as a decimal value and the units are
 $`V/m`$.
@@ -280,13 +280,14 @@ The `config` directory contains the two pre-shipped configuration files. Both fi
 simulated volume but `sample_config.ini` contains comments elaborating on different elements.
 
 The `src` directory contains the source code for the `efield_from_tdJ.py` tool, including the
-`efield_from_tdJ.py` script itself and other files imported for the computation, storing globals,
-reading the input, writing the output, defining the SimulationVolume class and related classes, and
-setting physical constants.
+`efield_from_tdJ.py` script itself and other files imported for the computation (`efield_math.py`),
+storing globals (`calculation_globals.py`), reading the input (`read_process_inputs.py`), writing the
+output (`write_outputs.py`), defining the SimulationVolume class and related classes
+(`simulation_geometry.py`), and etting physical constants (`physical_constants.py`).
 
 The `utils` directory has two utility scripts. The `bin_to_csv.py` converts a binary file to a
 `efield_from_tdJ.py` compatible input. This script is unlikely to be of use to a user. The other
-utility, `plot_ascii_output.py`, is much more broadly useable and created a PDF plot of a given
+utility, `plot_ascii_output.py`, is much more broadly useable and creates a PDF plot of a given
 ASCII output from `efield_from_tdJ.py`.
 
 References
