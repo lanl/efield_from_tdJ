@@ -1,6 +1,8 @@
 `efield_from_tdJ.py` User Guide
 ====================================================================================================
 
+Developed at Los Alamos National Laboratory. Approved for open-source release (O4986)
+
 Overview
 ----------------------------------------------------------------------------------------------------
 The `efield_from_tdJ.py` Python tool is designed to compute the electric field from a general
